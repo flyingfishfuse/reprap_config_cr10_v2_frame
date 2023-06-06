@@ -70,3 +70,128 @@
 ;  G1 is "move stepper"
 ;  H0 is "use too"
 ; General preferences
+G90                                                ; send absolute coordinates...
+M83                                                ; ...but relative extruder moves
+M550 P"meeprint"                                   ; set printer name
+
+; Network
+M551 P"Password1!"                                 ; set password
+M552 S1                                            ; enable network
+M586 P0 S1                                         ; enable HTTP
+M586 P1 S0                                         ; disable FTP
+M586 P2 S0                                         ; disable Telnet
+
+; Drives
+
+; x axis
+;M569 P0.4 S0                                       ; physical drive 0.4 goes backwards
+M569 P0.4 S1                                       ; physical drive 0.4 goes forwards
+
+; y axis
+M569 P0.3 S0                                       ; physical drive 0.3 goes backwards
+;M569 P0.3 S1                                       ; physical drive 0.3 goes forwards
+
+; extruder
+M569 P0.1 S0                                       ; physical drive 0.1 goes backwards
+;M569 P0.1 S1                                       ; physical drive 0.1 goes forwards
+
+; z axis 1
+M569 P0.2 S1 D3 V40                                      ; physical drive 0.2 goes forwards
+;M569 P0.2 S0                                       ; physical drive 0.2 goes backwards
+; Z axis 2
+M569 P0.0 S1 D3 V40                                      ; physical drive 0.1 goes forwards
+;M569 P0.0 S0                                       ; physical drive 0.1 goes backwards
+
+
+M584 X0.4 Y0.3 Z0.2:0.0 E0.1                       ; set drive mapping
+M350 X16 Y16 Z16 E16 I1                            ; configure microstepping with interpolation
+M92 X80.00 Y80.00 Z400.00 E932.00                  ; set steps per mm
+M566 X900.00 Y900.00 Z60.00 E120.00                ; set maximum instantaneous speed changes (mm/min)
+M203 X6000.00 Y6000.00 Z180.00 E1200.00            ; set maximum speeds (mm/min)
+M201 X500.00 Y500.00 Z20.00 E250.00                ; set accelerations (mm/s^2)
+M906 X800 Y800 Z800 E800 I30                       ; set motor currents (mA) and motor idle factor in per cent
+M84 S30                                            ; Set idle timeout
+
+; Axis Limits
+M208 X0 Y0 Z0 S1                                   ; set axis minima
+M208 X300 Y300 Z400 S0                             ; set axis maxima
+
+; Endstops
+;M574 X1 S1 P"!io5.in"                              ; configure switch-type (e.g. microswitch) endstop for low end on X via pin !io5.in
+;M574 Y1 S1 P"!io6.in"                              ; configure switch-type (e.g. microswitch) endstop for low end on Y via pin !io6.in
+;M574 Z1 S1 P"!io2.in"                              ; configure switch-type (e.g. microswitch) endstop for low end on Z via pin !io2.in
+M574 X1 S1 P"io5.in"                              ; configure switch-type (e.g. microswitch) endstop for low end on X via pin !io5.in
+M574 Y1 S1 P"io6.in"                              ; configure switch-type (e.g. microswitch) endstop for low end on Y via pin !io6.in
+M574 Z1 S1 P"io2.in"                              ; configure switch-type (e.g. microswitch) endstop for low end on Z via pin !io2.in
+
+; Z-Probe
+M558 P5 C"^io3.in" H5 F120 T6000                   ; set Z probe type to switch and the dive height + speeds
+G31 P500 X0 Y0 Z2.5                                ; set Z probe trigger value, offset and trigger height
+M557 X15:215 Y15:195 S20                           ; define mesh grid
+
+;==============================================================================
+; ===== HEATERS =====
+;==============================================================================
+; BED
+;===========
+; configure sensor 0 as thermistor on pin temp0
+M308 S0 P"temp0" Y"thermistor" T100000 B4138
+
+; create bed heater output on out0 and map it to sensor 0
+M950 H0 C"out0" T0
+
+; disable bang-bang mode for the bed heater and set PWM limit
+; OLD
+;M307 H0 B0 S1.00
+; NEW
+M307 H0 R0.288 K0.439:0.000 D7.01 E1.35 S1.00 B0
+
+; map heated bed to heater 0
+M140 H0                                     
+
+; set temperature limit for heater 0 to 120C
+M143 H0 S120
+
+;===========
+; EXTRUDER
+;===========
+; configure sensor 1 as PT100 on pin spi.cs1
+M308 R430 S1 P"spi.cs2" Y"rtd-max31865"
+
+; create nozzle heater output on out1 and map it to sensor 1
+M950 H1 C"out1" T1
+
+; disable bang-bang mode for heater  and set PWM limit
+; OLD
+;M307 H1 B0 S1.00
+;NEW
+ M307 H1 R3.043 K0.221:0.000 D10.33 E1.35 S1.00 B0 V24.1
+
+
+; set temperature limit for heater 1 to 280C
+M143 H1 S280
+
+;M308 S1 P"temp1" Y"thermistor" T100000 B4138       ; configure sensor 1 as thermistor on pin temp1
+;M950 H1 C"out1" T1                                 ; create nozzle heater output on out1 and map it to sensor 1
+;M307 H1 B0 S1.00                                   ; disable bang-bang mode for heater  and set PWM limit
+;M143 H1 S500                                       ; set temperature limit for heater 1 to 500C
+
+; Fans
+M950 F0 C"out3" Q500                               ; create fan 0 on pin out3 and set its frequency
+M106 P0 S0 H-1                                     ; set fan 0 value. Thermostatic control is turned off
+M950 F1 C"out4" Q500                               ; create fan 1 on pin out4 and set its frequency
+M106 P1 S1 H1 T45                                  ; set fan 1 value. Thermostatic control is turned on
+M950 F2 C"out5" Q500                               ; create fan 2 on pin out5 and set its frequency
+M106 P2 S1 H0 T45                                  ; set fan 2 value. Thermostatic control is turned on
+
+; Tools
+M563 P0 D0 H1 F0                                   ; define tool 0
+G10 P0 X0 Y0 Z0                                    ; set tool 0 axis offsets
+G10 P0 R0 S0                                       ; set initial tool 0 active and standby temperatures to 0C
+
+; Custom settings are not defined
+
+; Miscellaneous
+M501                                               ; load saved parameters from non-volatile memory
+M911 S10 R11 P"M913 X0 Y0 G91 M83 G1 Z3 E-5 F1000" ; set voltage thresholds and actions to run on power loss
+
